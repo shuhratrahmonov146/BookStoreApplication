@@ -37,8 +37,8 @@ namespace BookStore.Controllers
         public async Task<IActionResult> PutBook(int id, UpdateBookDto bookDto)
         {
   
-            var result = await _bookServices.DeleteBookAsync(id);
-            if (!result)
+            var result = await _bookServices.UpdateBookAsync(id, bookDto);
+            if (result == null)
             {
                 return NotFound();
             }

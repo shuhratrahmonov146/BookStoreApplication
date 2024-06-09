@@ -68,16 +68,27 @@ namespace BookStore.Services
 
         public async Task<BookDto> UpdateBookAsync(int id, UpdateBookDto bookDto)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
+
+            var existingBook = await _context.Books.Include(b => b.Authors).FirstOrDefaultAsync(b => b.Id == id);
+            if (existingBook == null)
             {
                 return null;
             }
 
-            _mapper.Map(bookDto, book);
+       
+            _mapper.Map(bookDto, existingBook);
+
+
+            var authors = await _context.Authors.Where(a => bookDto.AuthorIds.Contains(a.Id)).ToListAsync();
+
+       
+            existingBook.Authors.Clear();
+            existingBook.Authors.AddRange(authors);
+
+            _context.Entry(existingBook).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            return _mapper.Map<BookDto>(book);
+            return _mapper.Map<BookDto>(existingBook);
         }
     }
 }
