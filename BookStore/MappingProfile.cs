@@ -12,8 +12,7 @@ namespace BookStore
             CreateMap<Author, AuthorDto>().ReverseMap();
             CreateMap<CreateBookDto, Book>();
             CreateMap<UpdateBookDto, Book>()
-            .ForMember(dest => dest.Authors, opt => opt.Ignore());
-
+                    .ForMember(dest => dest.Authors, opt => opt.Ignore());
         }
     }
 }

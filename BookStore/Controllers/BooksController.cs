@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using AutoMapper;
-using BookStore.Models;
-using BookStore.Data;
 using BookStore.Dtos;
+using BookStore.Services;
 
 namespace BookStore.Controllers
 {
@@ -11,103 +8,59 @@ namespace BookStore.Controllers
     [Route("api/[controller]")]
     public class BooksController : ControllerBase
     {
-        private readonly BookStoreContext _context;
-        private readonly IMapper _mapper;
+        private readonly IBookServices _bookServices;
 
-        public BooksController(BookStoreContext context, IMapper mapper)
+        public BooksController(IBookServices bookServices)
         {
-            _context = context;
-            _mapper = mapper;
+            _bookServices = bookServices;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<BookDto>>> GetBooks()
         {
-            var books = await _context.Books.Include(b => b.Authors).ToListAsync();
-            return Ok(_mapper.Map<IEnumerable<BookDto>>(books));
+            var books = await _bookServices.GetAllBooksAsync();
+            return Ok(books);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<BookDto>> GetBook(int id)
         {
-            var book = await _context.Books.Include(b => b.Authors).FirstOrDefaultAsync(b => b.Id == id);
-
+            var book = await _bookServices.GetBookByIdAsync(id);
             if (book == null)
             {
                 return NotFound();
             }
-
-            return Ok(_mapper.Map<BookDto>(book));
+            return Ok(book);    
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBook(int id, UpdateBookDto bookDto)
         {
   
-            var existingBook = await _context.Books.Include(b => b.Authors).FirstOrDefaultAsync(b => b.Id == id);
-            if (existingBook == null)
+            var result = await _bookServices.DeleteBookAsync(id);
+            if (!result)
             {
                 return NotFound();
             }
-            _mapper.Map(bookDto, existingBook);
-
-            var authors = await _context.Authors.Where(a => bookDto.AuthorIds.Contains(a.Id)).ToListAsync();
-            existingBook.Authors.Clear();
-            existingBook.Authors.AddRange(authors);
-
-            _context.Entry(existingBook).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Books.Any(b => b.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
             return NoContent();
         }
 
         [HttpPost]
         public async Task<ActionResult<BookDto>> PostBook(CreateBookDto createBookDto)
         {
-            var book = _mapper.Map<Book>(createBookDto);
-
-            var authors = await _context.Authors
-                                        .Where(a => createBookDto.AuthorIds.Contains(a.Id))
-                                        .ToListAsync();
-
-            book.Authors.AddRange(authors);
-
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
-
-            var bookDto = _mapper.Map<BookDto>(book);
-
-            return CreatedAtAction("GetBook", new { id = bookDto.Id }, bookDto);
+            var newBook = await _bookServices.AddBookAsync(createBookDto);
+            return CreatedAtAction(nameof(GetBook), new { id = newBook.Id }, newBook);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
+            var result = await _bookServices.DeleteBookAsync(id);
+            if (!result)
             {
                 return NotFound();
             }
-
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return NoContent(); 
         }
     }
 }

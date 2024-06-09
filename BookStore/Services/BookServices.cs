@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using BookStore.Data;
 using BookStore.Dtos;
+using BookStore.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Services
 {
@@ -13,26 +15,69 @@ namespace BookStore.Services
         {
             _context = context;
             _mapper = mapper;
-        }fgfgfgf
-
-        public Task<bool> DeleteBookAsync(int id)
-        {
-            throw new NotImplementedException();
         }
 
-        public Task<List<BookDto>> GetAllBooksAsync()
+        public async Task<BookDto> AddBookAsync(CreateBookDto createBookDto)
         {
-            throw new NotImplementedException();
+            var book = _mapper.Map<Book>(createBookDto);
+
+            var authors = await _context.Authors
+                                        .Where(a => createBookDto.AuthorIds.Contains(a.Id))
+                                        .ToListAsync();
+
+            book.Authors.AddRange(authors);
+
+            _context.Books.Add(book);
+            await _context.SaveChangesAsync();
+
+            var bookDto = _mapper.Map<BookDto>(book);
+            return bookDto;
+            
         }
 
-        public Task<BookDto> GetBookByIdAsync(int id)
+        public async Task<bool> DeleteBookAsync(int id)
         {
-            throw new NotImplementedException();
+            var book = await _context.Books.FindAsync(id);
+            if (book == null)
+            {
+                return false;
+            }
+
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
 
-        public Task<BookDto> UpdateBookAsync(int id, UpdateBookDto bookDto)
+        public async Task<List<BookDto>> GetAllBooksAsync()
         {
-            throw new NotImplementedException();
+            var books = await _context.Books.Include(b => b.Authors).ToListAsync();
+            return _mapper.Map<List<BookDto>>(books);
+        }
+
+        public async Task<BookDto> GetBookByIdAsync(int id)
+        {
+            var book = await _context.Books.Include(b => b.Authors).FirstOrDefaultAsync(b => b.Id == id);
+            if (book == null)
+            {
+                return null;
+            }
+
+            return _mapper.Map<BookDto>(book);
+        }
+
+        public async Task<BookDto> UpdateBookAsync(int id, UpdateBookDto bookDto)
+        {
+            var book = await _context.Books.FindAsync(id);
+            if (book == null)
+            {
+                return null;
+            }
+
+            _mapper.Map(bookDto, book);
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<BookDto>(book);
         }
     }
 }

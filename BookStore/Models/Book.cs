@@ -8,6 +8,5 @@
         public string ImageUrl { get; set; }
         public Category Category { get; set; }
         public List<Author> Authors { get; set; } = new List<Author>();
-
     }
 }

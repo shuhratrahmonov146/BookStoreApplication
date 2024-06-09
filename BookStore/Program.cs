@@ -1,6 +1,5 @@
-using BookStore;
 using BookStore.Data;
-using Microsoft.AspNetCore.Hosting;
+using BookStore.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +16,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddDbContext<BookStoreContext>(options =>
            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IBookServices, BookServices>();
 
 var app = builder.Build();
 
