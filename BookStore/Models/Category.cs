@@ -1,5 +1,8 @@
-﻿namespace BookStore.Models
+﻿using System.Text.Json.Serialization;
+
+namespace BookStore.Models
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Category
     {
         Fiction,
