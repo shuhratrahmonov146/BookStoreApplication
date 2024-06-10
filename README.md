@@ -24,7 +24,7 @@ The BookStore API is a RESTful web service that allows users to manage books and
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/your-username/BookStore.git](https://github.com/shuhratrahmonov146/BookStoreApplication.git
+    git clone https://github.com/shuhratrahmonov146/BookStoreApplication.git
     cd BookStore
     ```
 
